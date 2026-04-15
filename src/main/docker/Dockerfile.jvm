@@ -1,0 +1,69 @@
+####
+# Imagem JVM para o Painel SISPAGAER Backend
+#
+# Construção em dois estágios:
+#   Estágio 1 (build): compila e empacota com Maven
+#   Estágio 2 (runtime): imagem mínima de produção
+#
+# Para construir e executar:
+#   docker build -f src/main/docker/Dockerfile.jvm -t painel-sispagaer-backend:latest .
+#   docker run -i --rm -p 8080:8080 \
+#     -e DB_URL=postgresql://host:5432/dw_sispagaer \
+#     -e DB_USERNAME=sispagaer \
+#     -e DB_PASSWORD=<secret> \
+#     -e API_KEY=<secret> \
+#     -e CORS_ALLOWED_ORIGINS=https://painel.sispagaer.fab.mil.br \
+#     painel-sispagaer-backend:latest
+####
+
+# --- Estágio 1: Build ---
+FROM eclipse-temurin:25-jdk-noble AS build
+
+WORKDIR /build
+
+# Copia o wrapper Maven e o pom.xml primeiro (cache de camadas)
+COPY mvnw mvnw
+COPY .mvn .mvn
+COPY pom.xml pom.xml
+
+# Baixa dependências antes de copiar o código (otimiza cache do Docker)
+RUN ./mvnw dependency:go-offline -q
+
+# Copia o código-fonte e compila
+COPY src src
+RUN ./mvnw package -DskipTests -q
+
+# --- Estágio 2: Runtime ---
+FROM eclipse-temurin:25-jre-noble
+
+LABEL maintainer="dpa@fab.mil.br"
+LABEL org.opencontainers.image.title="Painel SISPAGAER Backend"
+LABEL org.opencontainers.image.description="API de dados de folha de pagamento da FAB"
+LABEL org.opencontainers.image.vendor="Força Aérea Brasileira"
+
+# Usuário não-root por segurança (princípio do mínimo privilégio)
+RUN groupadd -r sispagaer && useradd -r -g sispagaer -u 1001 sispagaer
+
+WORKDIR /deployments
+
+# Copia apenas o artefato empacotado pelo Quarkus (fast-jar)
+COPY --from=build --chown=sispagaer:sispagaer /build/target/quarkus-app/lib/            ./lib/
+COPY --from=build --chown=sispagaer:sispagaer /build/target/quarkus-app/*.jar           ./
+COPY --from=build --chown=sispagaer:sispagaer /build/target/quarkus-app/app/            ./app/
+COPY --from=build --chown=sispagaer:sispagaer /build/target/quarkus-app/quarkus/        ./quarkus/
+
+USER 1001
+
+EXPOSE 8080
+
+# Configuração da JVM para contêineres:
+# - UseContainerSupport: respeita os limites de memória do pod Kubernetes
+# - MaxRAMPercentage: usa até 75% da memória disponível para heap
+# - ExitOnOutOfMemoryError: reinicia o pod em vez de ficar degradado
+ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 \
+               -Djava.util.logging.manager=org.jboss.logmanager.LogManager \
+               -XX:+UseContainerSupport \
+               -XX:MaxRAMPercentage=75.0 \
+               -XX:+ExitOnOutOfMemoryError"
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]
