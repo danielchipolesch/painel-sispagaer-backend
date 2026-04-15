@@ -63,3 +63,5 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 public class OpenApiConfig extends Application {
     // Classe de configuração — sem lógica de negócio.
 }
+
+
