@@ -1,0 +1,108 @@
+# =============================================================================
+# .gitignore — Painel SISPAGAER Backend
+# Java 25 + Quarkus + Maven + IntelliJ IDEA + Windows
+# =============================================================================
+
+# =============================================================================
+# SEGURANÇA — nunca versionar
+# =============================================================================
+.env
+.env.*
+*.env
+secrets/
+application-prod.properties
+application-production.properties
+
+# =============================================================================
+# JAVA — compilação
+# =============================================================================
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+
+# =============================================================================
+# MAVEN
+# =============================================================================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# Maven Wrapper JAR — baixado automaticamente na primeira execução.
+# Os scripts mvnw / mvnw.cmd e o maven-wrapper.properties SÃO versionados.
+.mvn/wrapper/maven-wrapper.jar
+
+# =============================================================================
+# QUARKUS
+# =============================================================================
+
+# Binário nativo compilado pelo GraalVM
+*-runner
+*-runner.jar
+
+# Configuração gerada pelo Quarkus Dev Mode
+.quarkus/
+
+# Recursos gerados por extensões (OpenAPI, jOOQ codegen, etc.)
+src/main/resources/META-INF/openapi.yaml
+src/generated/
+
+# Manifestos Kubernetes gerados pelo plugin quarkus-kubernetes.
+# Remova esta linha se preferir versionar os manifestos gerados.
+target/kubernetes/
+
+# =============================================================================
+# INTELLIJ IDEA
+# =============================================================================
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# =============================================================================
+# SISTEMA OPERACIONAL — Windows
+# =============================================================================
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# =============================================================================
+# SISTEMA OPERACIONAL — macOS / Linux (para eventuais colaboradores)
+# =============================================================================
+.DS_Store
+.Spotlight-V100
+.Trashes
+*~
+.fuse_hidden*
+.nfs*
+
+# =============================================================================
+# LOGS
+# =============================================================================
+*.log
+logs/
+
+# =============================================================================
+# COBERTURA DE TESTES
+# =============================================================================
+jacoco.exec
+.jacoco/
+
+# =============================================================================
+# EDITORES DIVERSOS
+# =============================================================================
+.vscode/
+*.suo
+*.sw?
