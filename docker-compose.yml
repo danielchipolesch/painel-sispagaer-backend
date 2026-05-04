@@ -1,0 +1,38 @@
+services:
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: dw_sispagaer
+      MYSQL_USER: sispagaer
+      MYSQL_PASSWORD: changeme
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "sispagaer", "-pchangeme"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.jvm
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: mysql://db:3306/dw_sispagaer
+      DB_USERNAME: sispagaer
+      DB_PASSWORD: changeme
+      API_KEY: dev-only-key-troque-em-producao
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:5173
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:
